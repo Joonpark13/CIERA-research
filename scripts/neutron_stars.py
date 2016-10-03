@@ -109,7 +109,7 @@ def main():
     plt.title("Evolution of Single Neutron Star Counts")
     plt.xlabel("Physical Time (Myr)")
     plt.ylabel("Neutron Star Count")
-    plt.savefig("single_counts.png")
+    plt.savefig("output/single_counts.png")
     plt.clf()
 
     binary_data = get_binary_data()
@@ -117,7 +117,7 @@ def main():
     plt.title("Evolution of Binary Neutron Star Counts")
     plt.xlabel("Physical Time (Myr)")
     plt.ylabel("Neutron Star Count")
-    plt.savefig("binary_counts.png")
+    plt.savefig("output/binary_counts.png")
 
 if __name__ == "__main__":
     main()
