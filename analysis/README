@@ -1,5 +1,0 @@
-I copied this from Quest:
-
-/projects/b1011/ageller/NBODY6ppGPU/Nbody6ppGPU-newSE/run/RgSun_NZgrid_BHFLAG2_smallN_retry/analysis
-
-It looks like Josh commented out some sections in analysis.py.  Looking at other versions of this code, I'm guessing that the first time through he doesn't comment anything out.  But if it breaks, or he needs to rerun things, he comments out the portions that he doesn't need.
