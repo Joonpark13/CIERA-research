@@ -1,3 +1,5 @@
+## From Aaron:
+
 this directory contains 1 N-body simulation from our current grid.  This was copied from Quest:
 
  /projects/b1011/ageller/NBODY6ppGPU/Nbody6ppGPU-newSE/run/RgSun_NZgrid_BHFLAG2_smallN_retry/N5K_r26_Z002_1
@@ -145,3 +147,7 @@ There are plenty more files in there of eventual interest.  But for now, this sh
 Also, there is an analysis directory that contains Josh Fuhrman's files that he used to analyse the entire grid (where this N5K_r26_Z002_1) directory was one simulation.  There's a short README file in there that I created.  I think Josh also made some README somewhere, but I couldn't find it today.
 
 ------------------
+
+## `/scripts` directory
+
+The `/scripts` directory contains the python analysis scripts and their output files.
