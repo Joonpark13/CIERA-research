@@ -10,6 +10,7 @@ import os
 import glob
 import matplotlib.pyplot as plt
 import bisect
+import numpy as np
 
 __author__ = "Joon Park"
 __version__ = 1.0
@@ -142,26 +143,47 @@ def get_single_escape_data():
 
     return (timesteps, starcounts)
 
+def hist_data(timesteps, counts):
+    """Converts timesteps and counts to a histogrammable format.
+
+    timesteps and counts must have the same length.
+    """
+    converted = ([], [])
+    for i in range(len(timesteps)):
+        converted[0].append(timesteps[i])
+        converted[0].append(timesteps[i])
+        converted[1].append(counts[i])
+        converted[1].append(counts[i])
+    # remove the first extra 0
+    converted[0].pop(0)
+    # remove the last extra height
+    converted[1].pop()
+
+    return converted
+
 
 def main():
     single = get_single_data()
     single_escape = get_single_escape_data()
-    plt.plot(single[0], single[1], label="Counts")
-    plt.plot(single_escape[0], single_escape[1], 'o', label="Escapes")
+
+    single_hist = hist_data(single[0], single[1])
+
+    plt.plot(single_hist[0], single_hist[1], label="Counts")
+    # plt.plot(single_escape[0], single_escape[1], 'o', label="Escapes")
     plt.title("Evolution of Single Neutron Star Counts")
     plt.xlabel("Physical Time (Myr)")
     plt.ylabel("Neutron Star Count")
     plt.legend()
     plt.savefig("output/single_counts.png")
 
-    plt.clf()
-
-    binary_data = get_binary_data()
-    plt.plot(binary_data[0], binary_data[1])
-    plt.title("Evolution of Binary Neutron Star Counts")
-    plt.xlabel("Physical Time (Myr)")
-    plt.ylabel("Neutron Star Count")
-    plt.savefig("output/binary_counts.png")
+    # plt.clf()
+    #
+    # binary_data = get_binary_data()
+    # plt.plot(binary_data[0], binary_data[1])
+    # plt.title("Evolution of Binary Neutron Star Counts")
+    # plt.xlabel("Physical Time (Myr)")
+    # plt.ylabel("Neutron Star Count")
+    # plt.savefig("output/binary_counts.png")
 
 if __name__ == "__main__":
     main()
