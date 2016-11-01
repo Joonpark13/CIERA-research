@@ -103,13 +103,57 @@ def get_binary_data():
 
     return (timesteps, starcounts)
 
+def get_single_escape_data():
+    """Returns the number of escaped neutron stars with physical times.
+
+    For single stars only, not binary stars!
+
+    return format:
+        (
+            [physical_time_1, physical_time_2, ...],
+            [#_of_escaped_neutron_stars_1, #_of_escaped_neutron_stars_2, ...]
+        )
+
+        Ordered according to physical time.
+    """
+    filename = os.path.join(DATA_DIR, "esc.11")
+
+    timesteps = [] # Will hold the physical times from each file
+    starcounts = [] # Will hold numbers of escaped neutron stars at each timestep.
+    with open(filename, 'r') as f:
+        # Skip the header
+        next(f)
+
+        for line in f:
+            data_line = line.split()
+            # 5th item in row is star type
+            type = data_line[4]
+
+            if int(type) == NEUTRON_STAR:
+                # Physical time is the first item in each line
+                time = data_line[0]
+                # If timestep is same as previous line, update instead of add data.
+                last_ind = len(timesteps) - 1
+                if last_ind >= 0 and timesteps[last_ind] == time:
+                    starcounts[last_ind] += 1
+                else:
+                    timesteps.append(time)
+                    starcounts.append(1)
+
+    return (timesteps, starcounts)
+
+
 def main():
-    single_data = get_single_data()
-    plt.plot(single_data[0], single_data[1])
+    single = get_single_data()
+    single_escape = get_single_escape_data()
+    plt.plot(single[0], single[1], label="Counts")
+    plt.plot(single_escape[0], single_escape[1], 'o', label="Escapes")
     plt.title("Evolution of Single Neutron Star Counts")
     plt.xlabel("Physical Time (Myr)")
     plt.ylabel("Neutron Star Count")
+    plt.legend()
     plt.savefig("output/single_counts.png")
+
     plt.clf()
 
     binary_data = get_binary_data()
