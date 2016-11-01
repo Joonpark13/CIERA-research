@@ -13,7 +13,7 @@ import bisect
 import numpy as np
 
 __author__ = "Joon Park"
-__version__ = 1.0
+__version__ = 1.2
 __email__ = "JoonPark@u.northwestern.edu"
 
 # Set data source directory relative to this file.
@@ -104,23 +104,14 @@ def get_binary_data():
 
     return (timesteps, starcounts)
 
-def get_single_escape_data():
-    """Returns the number of escaped neutron stars with physical times.
+def get_single_escapes():
+    """Returns a list of physics times at which a neutron star escaped.
 
     For single stars only, not binary stars!
-
-    return format:
-        (
-            [physical_time_1, physical_time_2, ...],
-            [#_of_escaped_neutron_stars_1, #_of_escaped_neutron_stars_2, ...]
-        )
-
-        Ordered according to physical time.
     """
     filename = os.path.join(DATA_DIR, "esc.11")
 
-    timesteps = [] # Will hold the physical times from each file
-    starcounts = [] # Will hold numbers of escaped neutron stars at each timestep.
+    times = []
     with open(filename, 'r') as f:
         # Skip the header
         next(f)
@@ -133,15 +124,9 @@ def get_single_escape_data():
             if int(type) == NEUTRON_STAR:
                 # Physical time is the first item in each line
                 time = data_line[0]
-                # If timestep is same as previous line, update instead of add data.
-                last_ind = len(timesteps) - 1
-                if last_ind >= 0 and timesteps[last_ind] == time:
-                    starcounts[last_ind] += 1
-                else:
-                    timesteps.append(time)
-                    starcounts.append(1)
+                times.append(float(time))
 
-    return (timesteps, starcounts)
+    return times
 
 def hist_data(timesteps, counts):
     """Converts timesteps and counts to a histogrammable format.
@@ -164,12 +149,12 @@ def hist_data(timesteps, counts):
 
 def main():
     single = get_single_data()
-    single_escape = get_single_escape_data()
-
     single_hist = hist_data(single[0], single[1])
-
     plt.plot(single_hist[0], single_hist[1], label="Counts")
-    # plt.plot(single_escape[0], single_escape[1], 'o', label="Escapes")
+
+    single_escapes = get_single_escapes()
+    plt.hist(single_escapes, bins=single[0], label="Escapes")
+
     plt.title("Evolution of Single Neutron Star Counts")
     plt.xlabel("Physical Time (Myr)")
     plt.ylabel("Neutron Star Count")
