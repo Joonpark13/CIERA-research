@@ -16,12 +16,28 @@ __author__ = "Joon Park"
 __version__ = 1.2
 __email__ = "JoonPark@u.northwestern.edu"
 
-# Set data source directory relative to this file.
-DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "N5K_r26_Z002_1", "save01")
 # Star type
 NEUTRON_STAR = 13
 
-def get_single_data():
+def hist_data(timesteps, counts):
+    """Converts timesteps and counts to a histogrammable format.
+
+    timesteps and counts must have the same length.
+    """
+    converted = ([], [])
+    for i in range(len(timesteps)):
+        converted[0].append(timesteps[i])
+        converted[0].append(timesteps[i])
+        converted[1].append(counts[i])
+        converted[1].append(counts[i])
+    # remove the first extra 0
+    converted[0].pop(0)
+    # remove the last extra height
+    converted[1].pop()
+
+    return converted
+
+def get_single_data(data_dir):
     """Returns the number of neutron stars with physical times.
     
     For single stars only, not binary stars!
@@ -35,7 +51,7 @@ def get_single_data():
         Ordered according to physical time.
     """
     # Grab all the single star data files
-    single_stars = os.path.join(DATA_DIR, "sev.83_*")
+    single_stars = os.path.join(data_dir, "sev.83_*")
 
     timesteps = [] # Will hold the physical times from each file
     starcounts = [] # Will hold numbers of neutron stars at each timestep.
@@ -63,7 +79,7 @@ def get_single_data():
                     
     return (timesteps, starcounts)
 
-def get_binary_data():
+def get_binary_data(data_dir):
     """Returns the number of neutron stars with physical times.
 
     For binary stars only, not single stars!
@@ -77,7 +93,7 @@ def get_binary_data():
         Ordered according to physical time.
     """
     # Grab all the binary star data files
-    binary_stars = os.path.join(DATA_DIR, "bev.82_*")
+    binary_stars = os.path.join(data_dir, "bev.82_*")
 
     timesteps = [] # Will hold the physical times from each file
     starcounts = [] # Will hold numbers of neutron stars at each timestep.
@@ -104,12 +120,12 @@ def get_binary_data():
 
     return (timesteps, starcounts)
 
-def get_single_escapes():
+def get_single_escapes(data_dir):
     """Returns a list of physics times at which a neutron star escaped.
 
     For single stars only, not binary stars!
     """
-    filename = os.path.join(DATA_DIR, "esc.11")
+    filename = os.path.join(data_dir, "esc.11")
 
     times = []
     with open(filename, 'r') as f:
@@ -128,32 +144,28 @@ def get_single_escapes():
 
     return times
 
-def hist_data(timesteps, counts):
-    """Converts timesteps and counts to a histogrammable format.
-
-    timesteps and counts must have the same length.
-    """
-    converted = ([], [])
-    for i in range(len(timesteps)):
-        converted[0].append(timesteps[i])
-        converted[0].append(timesteps[i])
-        converted[1].append(counts[i])
-        converted[1].append(counts[i])
-    # remove the first extra 0
-    converted[0].pop(0)
-    # remove the last extra height
-    converted[1].pop()
-
-    return converted
-
 
 def main():
-    single = get_single_data()
-    single_hist = hist_data(single[0], single[1])
+    data_dir = os.path.join(os.path.dirname(__file__), "..", "N10K_r26_Z002_1", "save*")
+    timesteps = []
+    counts = []
+    # Go through all the save01, save02, etc folders
+    for dirname in glob.glob(data_dir):
+        single = get_single_data(dirname)
+        if len(timesteps) == 0:
+            timesteps = single[0]
+            counts = single[1]
+        else:
+            for ind, timestep in enumerate(single[0]):
+                if timestep > timesteps[-1]:
+                    timesteps.append(timestep)
+                    counts.append(single[1][ind])
+
+    single_hist = hist_data(timesteps, counts)
     plt.plot(single_hist[0], single_hist[1], label="Counts")
 
-    single_escapes = get_single_escapes()
-    plt.hist(single_escapes, bins=single[0], label="Escapes")
+    # single_escapes = get_single_escapes()
+    # plt.hist(single_escapes, bins=single[0], histtype="stepfilled", label="Escapes")
 
     plt.title("Evolution of Single Neutron Star Counts")
     plt.xlabel("Physical Time (Myr)")
