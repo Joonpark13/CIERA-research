@@ -63,8 +63,9 @@ def get_single_data(data_dir):
         starcounts = [] # Will hold numbers of neutron stars at each timestep.
         for filename in glob.glob(single_stars):
             with open(filename, 'r') as f:
+                row = f.readline().split()
                 # Physical time is the second item in the first line
-                physical_time = float(f.readline().split()[1])
+                physical_time = float(row[1])
                 # Save position so the starcount can be inserted at the same position
                 position = bisect.bisect(timesteps, physical_time)
                 # Insert so that timesteps is always ordered
@@ -142,7 +143,7 @@ def get_single_escapes(data_dir):
     """
     save_dirs = os.path.join(data_dir, "save*")
 
-    data = []
+    escape_times = []
     for dirname in glob.glob(save_dirs):
         # Neutron star escape counts
         filename = os.path.join(dirname, "esc.11")
@@ -151,30 +152,39 @@ def get_single_escapes(data_dir):
             # Skip the header
             next(f)
 
+            cut = False
             for line in f:
                 data_line = line.split()
                 # 5th item in row is star type
                 type = data_line[4]
 
                 if int(type) == NEUTRON_STAR:
-                    starname = data_line[5] # Star name (number) is 6th item in row
-                    if len(data) == 0: # For save01
-                        time = data_line[0] # Physical time is the first item in each row
-                        data.append( (float(time), int(starname)) ) # Append a tuple
+                    if len(escape_times) == 0: # For save01
+                        escape_times.append(float(data_line[0])) # Physical time is the first item in each row
                     else:
-                        pass # TODO: Currently only processes data from save01's esc.11
+                        time = float(data_line[0])
+                        # Throw away duplicate data from previous save
+                        if not cut:
+                            cut_ind = 0
+                            for ind, val in enumerate(escape_times):
+                                if time < val:
+                                    cut_ind = ind
+                            escape_times = escape_times[:cut_ind + 1]
+                            cut = True
+                        escape_times.append(time)
 
-    return [x[0] for x in data] # Return only a list of times
+    return escape_times
 
 
 def main():
     data_dir = os.path.join(os.path.dirname(__file__), "..", "N10K_r26_Z002_1")
 
     timesteps, counts = get_single_data(data_dir)
-
     single_hist = hist_data(timesteps, counts)
     plt.plot(single_hist[0], single_hist[1], label="Counts")
-    # plt.hist(single_escapes, bins=single[0], histtype="stepfilled", label="Escapes")
+
+    single_escapes = get_single_escapes(data_dir)
+    plt.hist(single_escapes, bins=timesteps, histtype="stepfilled", label="Escapes", fill=False)
 
     plt.title("Evolution of Single Neutron Star Counts")
     plt.xlabel("Physical Time (Myr)")
