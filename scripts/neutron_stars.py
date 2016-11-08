@@ -10,7 +10,6 @@ import os
 import glob
 import matplotlib.pyplot as plt
 import bisect
-import numpy as np
 
 __author__ = "Joon Park"
 __version__ = 1.2
@@ -50,34 +49,50 @@ def get_single_data(data_dir):
 
         Ordered according to physical time.
     """
-    # Grab all the single star data files
-    single_stars = os.path.join(data_dir, "sev.83_*")
+    data_dir = os.path.join(data_dir, "save*")
 
-    timesteps = [] # Will hold the physical times from each file
-    starcounts = [] # Will hold numbers of neutron stars at each timestep.
-    for filename in glob.glob(single_stars):
-        with open(filename, 'r') as f:
-            # Physical time is the second item in the first line
-            physical_time = float(f.readline().split()[1])
-            # Save position so the starcount can be inserted at the same position
-            position = bisect.bisect(timesteps, physical_time)
-            # Insert so that timesteps is always ordered
-            bisect.insort(timesteps, physical_time)
+    total_timesteps = []
+    total_counts = []
 
-            # Skip the header
-            for _ in range(2):
-                next(f)
+    # Go through all the save01, save02, etc folders
+    for dirname in glob.glob(data_dir):
+        # Grab all the single star data files
+        single_stars = os.path.join(dirname, "sev.83_*")
 
-            # Count the number of neutron stars in this file (timestep)
-            counter = 0
-            for line in f:
-                data_line = line.split()
-                # second item in row is star type
-                if int(data_line[1]) == NEUTRON_STAR:
-                    counter += 1
-            starcounts.insert(position, counter)
-                    
-    return (timesteps, starcounts)
+        timesteps = [] # Will hold the physical times from each file
+        starcounts = [] # Will hold numbers of neutron stars at each timestep.
+        for filename in glob.glob(single_stars):
+            with open(filename, 'r') as f:
+                # Physical time is the second item in the first line
+                physical_time = float(f.readline().split()[1])
+                # Save position so the starcount can be inserted at the same position
+                position = bisect.bisect(timesteps, physical_time)
+                # Insert so that timesteps is always ordered
+                bisect.insort(timesteps, physical_time)
+
+                # Skip the header
+                for _ in range(2):
+                    next(f)
+
+                # Count the number of neutron stars in this file (timestep)
+                counter = 0
+                for line in f:
+                    data_line = line.split()
+                    # second item in row is star type
+                    if int(data_line[1]) == NEUTRON_STAR:
+                        counter += 1
+                starcounts.insert(position, counter)
+
+        if len(total_timesteps) == 0: # If save01
+            total_timesteps = timesteps
+            total_counts = starcounts
+        else:
+            for ind, timestep in enumerate(timesteps):
+                if timestep > total_timesteps[-1]: # Only append those that are not duplicates
+                    total_timesteps.append(timestep)
+                    total_counts.append(starcounts[ind])
+
+    return (total_timesteps, total_counts)
 
 def get_binary_data(data_dir):
     """Returns the number of neutron stars with physical times.
@@ -125,46 +140,40 @@ def get_single_escapes(data_dir):
 
     For single stars only, not binary stars!
     """
-    filename = os.path.join(data_dir, "esc.11")
+    save_dirs = os.path.join(data_dir, "save*")
 
-    times = []
-    with open(filename, 'r') as f:
-        # Skip the header
-        next(f)
+    data = []
+    for dirname in glob.glob(save_dirs):
+        # Neutron star escape counts
+        filename = os.path.join(dirname, "esc.11")
 
-        for line in f:
-            data_line = line.split()
-            # 5th item in row is star type
-            type = data_line[4]
+        with open(filename, 'r') as f:
+            # Skip the header
+            next(f)
 
-            if int(type) == NEUTRON_STAR:
-                # Physical time is the first item in each line
-                time = data_line[0]
-                times.append(float(time))
+            for line in f:
+                data_line = line.split()
+                # 5th item in row is star type
+                type = data_line[4]
 
-    return times
+                if int(type) == NEUTRON_STAR:
+                    starname = data_line[5] # Star name (number) is 6th item in row
+                    if len(data) == 0: # For save01
+                        time = data_line[0] # Physical time is the first item in each row
+                        data.append( (float(time), int(starname)) ) # Append a tuple
+                    else:
+                        pass # TODO: Currently only processes data from save01's esc.11
+
+    return [x[0] for x in data] # Return only a list of times
 
 
 def main():
-    data_dir = os.path.join(os.path.dirname(__file__), "..", "N10K_r26_Z002_1", "save*")
-    timesteps = []
-    counts = []
-    # Go through all the save01, save02, etc folders
-    for dirname in glob.glob(data_dir):
-        single = get_single_data(dirname)
-        if len(timesteps) == 0:
-            timesteps = single[0]
-            counts = single[1]
-        else:
-            for ind, timestep in enumerate(single[0]):
-                if timestep > timesteps[-1]:
-                    timesteps.append(timestep)
-                    counts.append(single[1][ind])
+    data_dir = os.path.join(os.path.dirname(__file__), "..", "N10K_r26_Z002_1")
+
+    timesteps, counts = get_single_data(data_dir)
 
     single_hist = hist_data(timesteps, counts)
     plt.plot(single_hist[0], single_hist[1], label="Counts")
-
-    # single_escapes = get_single_escapes()
     # plt.hist(single_escapes, bins=single[0], histtype="stepfilled", label="Escapes")
 
     plt.title("Evolution of Single Neutron Star Counts")
