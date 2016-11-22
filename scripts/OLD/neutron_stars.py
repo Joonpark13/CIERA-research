@@ -8,11 +8,14 @@ N5K_r26_Z002_1/save01 directory, where # is the nbody time.
 
 import os
 import glob
+# For running on quest
+import matplotlib as mpl
+mpl.use('Agg')
+
 import matplotlib.pyplot as plt
 import bisect
 
 __author__ = "Joon Park"
-__version__ = 1.2
 __email__ = "JoonPark@u.northwestern.edu"
 
 # Star type
@@ -56,12 +59,14 @@ def get_single_data(data_dir):
 
     # Go through all the save01, save02, etc folders
     for dirname in glob.glob(data_dir):
+        print dirname # DEBUG
         # Grab all the single star data files
         single_stars = os.path.join(dirname, "sev.83_*")
+        sev_list = glob.glob(single_stars)
 
         timesteps = [] # Will hold the physical times from each file
         starcounts = [] # Will hold numbers of neutron stars at each timestep.
-        for filename in glob.glob(single_stars):
+        for filename in sev_list:
             with open(filename, 'r') as f:
                 row = f.readline().split()
                 # Physical time is the second item in the first line
@@ -177,20 +182,39 @@ def get_single_escapes(data_dir):
 
 
 def main():
-    data_dir = os.path.join(os.path.dirname(__file__), "..", "N10K_r26_Z002_1")
+    params = {
+        'star_num': [10, 20, 40, 80, 160],
+        'rad': [26],
+        'metallicity': ['02', '002']
+    }
+    # data_dir = os.path.join("/projects/b1011/ageller/NBODY6ppGPU/Nbody6ppGPU-newSE/run",
+                            # "RgSun_NZgrid_BHFLAG2",
+                            # "N{0}K_r{1}_Z{2}_*".format(params['star_num'][0],
+                                                       # params['rad'][0],
+                                                       # params['metallicity'][0]
+                                                      # )
+                           # )
+    # DEBUG
+    data_dir = os.path.join(
+        "/projects/b1011/ageller/NBODY6ppGPU/Nbody6ppGPU-newSE/run",
+        "RgSun_NZgrid_BHFLAG2",
+        "N10K_r26_Z02_11"
+    )
+    for dir in glob.glob(data_dir):
+        timesteps, counts = get_single_data(dir)
+        single_hist = hist_data(timesteps, counts)
+        plt.plot(single_hist[0], single_hist[1], label="Counts")
 
-    timesteps, counts = get_single_data(data_dir)
-    single_hist = hist_data(timesteps, counts)
-    plt.plot(single_hist[0], single_hist[1], label="Counts")
+        single_escapes = get_single_escapes(dir)
+        plt.hist(single_escapes, bins=timesteps, histtype="stepfilled", label="Escapes", fill=False)
 
-    single_escapes = get_single_escapes(data_dir)
-    plt.hist(single_escapes, bins=timesteps, histtype="stepfilled", label="Escapes", fill=False)
+        plt.title("Evolution of Single Neutron Star Counts")
+        plt.xlabel("Physical Time (Myr)")
+        plt.ylabel("Neutron Star Count")
+        plt.legend()
+        plt.savefig("output/single_counts_{0}.png".format(dir.split('_')[-1]))
 
-    plt.title("Evolution of Single Neutron Star Counts")
-    plt.xlabel("Physical Time (Myr)")
-    plt.ylabel("Neutron Star Count")
-    plt.legend()
-    plt.savefig("output/single_counts.png")
+        plt.clf()
 
     # plt.clf()
     #
