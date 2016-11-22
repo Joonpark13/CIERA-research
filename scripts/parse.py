@@ -10,6 +10,24 @@ __email__ = "JoonPark@u.northwestern.edu"
 # Star type
 NEUTRON_STAR = 13
 
+def hist_data(timesteps, counts):
+    """Converts timesteps and counts to a histogrammable format.
+
+    timesteps and counts must have the same length.
+    """
+    converted = ([], [])
+    for i in range(len(timesteps)):
+        converted[0].append(timesteps[i])
+        converted[0].append(timesteps[i])
+        converted[1].append(counts[i])
+        converted[1].append(counts[i])
+    # remove the first extra 0
+    converted[0].pop(0)
+    # remove the last extra height
+    converted[1].pop()
+
+    return converted
+
 def parse_sev(sev_name):
     counter = 0
     with open(sev_name, 'r') as f:
@@ -25,9 +43,13 @@ def parse_sev(sev_name):
         # Count the number of neutron stars in this file (timestep)
         for line in f:
             data_line = line.split()
-            # second item in row is star type
-            if int(data_line[1]) == NEUTRON_STAR:
-                counter += 1
+            # In case the sev file is incorrectly formatted
+            try:
+                if int(data_line[1]) == NEUTRON_STAR: # second item in row is star type
+                    counter += 1
+            except ValueError:
+                print "Incorrectly formatted sev file detected. Ignoring incorrecty formatted data from:"
+                print sev_name
 
     return { "time": physical_time, "stars": counter }
 
