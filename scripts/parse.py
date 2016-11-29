@@ -43,10 +43,12 @@ def parse_sev(sev_name):
         # Count the number of neutron stars in this file (timestep)
         for line in f:
             data_line = line.split()
-            # In case the sev file is incorrectly formatted
+            if data_line[0] == -1000: # -1000 is sentinel value indicating EOF
+                return { "time": physical_time, "stars": counter }
             try:
                 if int(data_line[1]) == NEUTRON_STAR: # second item in row is star type
                     counter += 1
+            # In case the sev file is incorrectly formatted
             except ValueError:
                 print "Incorrectly formatted sev file detected. Ignoring incorrecty formatted data from:"
                 print sev_name
@@ -91,6 +93,36 @@ def parse_run(run_dir):
 
     return data
 
+def parse_esc(save_dir):
+    # TODO: Function may not be valid, reference discussion with Aaron
+    escape_times = []
+    with open(os.path.join(save_dir, "esc.11"), 'r') as f:
+        # Skip the header
+        next(f)
+
+        for line in f:
+            data_line = line.split()
+            # 5th item in row is star type
+            type = data_line[4]
+
+            if int(type) == NEUTRON_STAR:
+                escape_times.append(float(data_line[0])) # Physical time is the first item in each row
+
+    return escape_times
+
+def parse_run_esc(run_dir):
+    save_dirs = os.path.join(run_dir, "save*")
+
+    escapes = []
+    for dirname in glob.glob(save_dirs):
+        save_escapes = parse_esc(dirname)
+        if len(escapes) == 0: # For save01
+            escapes_times = save_escapes
+        else:
+            pass
+    # TODO: FUNCTION TO BE COMPLETED
+
+
 def test_parse_sev():
     data_dir = os.path.join(
         "/projects/b1011/ageller/NBODY6ppGPU/Nbody6ppGPU-newSE/run",
@@ -106,7 +138,7 @@ def test_parse_save():
         "/projects/b1011/ageller/NBODY6ppGPU/Nbody6ppGPU-newSE/run",
         "RgSun_NZgrid_BHFLAG2",
         "N10K_r26_Z02_11",
-        "save02",
+        "save02"
     )
     print parse_save(data_dir)
 
@@ -118,10 +150,20 @@ def test_parse_run():
     )
     print parse_run(data_dir)
 
+def test_parse_esc():
+    data_dir = os.path.join(
+        "/projects/b1011/ageller/NBODY6ppGPU/Nbody6ppGPU-newSE/run",
+        "RgSun_NZgrid_BHFLAG2",
+        "N10K_r26_Z02_11",
+        "save02"
+    )
+    print parse_esc(data_dir)
+
 def main():
     test_parse_sev()
-    test_parse_save()
-    test_parse_run()
+    # test_parse_save()
+    # test_parse_run()
+    # test_parse_esc()
 
 if __name__ == "__main__":
     main()
