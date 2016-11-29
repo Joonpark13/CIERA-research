@@ -98,8 +98,11 @@ def parse_run(run_dir):
 def parse_single_esc(save_dir):
     escape_times = []
     with open(os.path.join(save_dir, "esc.11"), 'r') as f:
-        # Skip the header
-        next(f)
+        try:
+            # Skip the header
+            next(f)
+        except StopIteration: # Empty file
+            return []
 
         for line in f:
             data_line = line.split()

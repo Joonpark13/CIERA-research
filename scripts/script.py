@@ -6,6 +6,7 @@ import glob
 import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
+
 import parse
 
 params = {
@@ -24,13 +25,17 @@ data_dir = os.path.join(
 )
 
 for dir in glob.glob(data_dir):
+    # Neutron star counts
     data = parse.parse_run(dir)
     timesteps = [x['time'] for x in data]
     counts = [x['stars'] for x in data]
 
     single_hist = parse.hist_data(timesteps, counts)
-
     plt.plot(single_hist[0], single_hist[1], label="Counts")
+
+    # Neutron star escape counts
+    single_escapes = parse.parse_single_run_esc(dir)
+    plt.hist(single_escapes, bins=timesteps, histtype="stepfilled", label="Escapes", fill=False)
 
     plt.title("Evolution of Single Neutron Star Counts")
     plt.xlabel("Physical Time (Myr)")
