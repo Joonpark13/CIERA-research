@@ -43,7 +43,7 @@ def parse_sev(sev_name):
         # Count the number of neutron stars in this file (timestep)
         for line in f:
             data_line = line.split()
-            if data_line[0] == -1000: # -1000 is sentinel value indicating EOF
+            if int(data_line[0]) == -1000: # -1000 is sentinel value indicating EOF
                 return { "time": physical_time, "stars": counter }
             try:
                 if int(data_line[1]) == NEUTRON_STAR: # second item in row is star type
@@ -53,6 +53,7 @@ def parse_sev(sev_name):
                 print "Incorrectly formatted sev file detected. Ignoring incorrecty formatted data from:"
                 print sev_name
 
+    # This should only be required in case there is no -1000 EOF value
     return { "time": physical_time, "stars": counter }
 
 def parse_save(save_dir):
@@ -160,7 +161,7 @@ def test_parse_esc():
     print parse_esc(data_dir)
 
 def main():
-    test_parse_sev()
+    # test_parse_sev()
     # test_parse_save()
     # test_parse_run()
     # test_parse_esc()
