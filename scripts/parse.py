@@ -56,6 +56,25 @@ def parse_sev(sev_name):
     # This should only be required in case there is no -1000 EOF value
     return { "time": physical_time, "stars": counter }
 
+def parse_bev(bev_name):
+    count = 0
+    with open(bev_name, 'r') as f:
+        row = f.readline().split()
+
+        # Physical time is the second item in the first line
+        physical_time = float(row[1])
+
+        for line in f:
+            data_line = line.split()
+            # third item in row is first star type
+            if int(data_line[2]) == NEUTRON_STAR:
+                count += 1
+            # fourth item in row is second star type
+            if int(data_line[3]) == NEUTRON_STAR:
+                count += 1
+
+    return { "time": physical_time, "stars": count }
+
 def parse_save(save_dir):
     sev_files = os.path.join(save_dir, "sev.83_*")
 
@@ -179,12 +198,23 @@ def test_parse_single_run_esc():
     )
     print parse_single_run_esc(data_dir)
 
+def test_parse_bev():
+    data_dir = os.path.join(
+        "/projects/b1011/ageller/NBODY6ppGPU/Nbody6ppGPU-newSE/run",
+        "RgSun_NZgrid_BHFLAG2",
+        "N10K_r26_Z02_11",
+        "save02",
+        "bev.82_805"
+    )
+    print parse_bev(data_dir)
+
 def main():
     # test_parse_sev()
     # test_parse_save()
     # test_parse_run()
     # test_parse_single_esc()
-    test_parse_single_run_esc()
+    # test_parse_single_run_esc()
+    test_parse_bev()
 
 if __name__ == "__main__":
     main()
