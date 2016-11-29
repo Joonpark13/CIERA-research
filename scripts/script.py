@@ -26,16 +26,24 @@ data_dir = os.path.join(
 
 for dir in glob.glob(data_dir):
     # Neutron star counts
-    data = parse.parse_run(dir)
-    timesteps = [x['time'] for x in data]
-    counts = [x['stars'] for x in data]
+    single_data = parse.parse_run(dir, "single")
+    single_timesteps = [x['time'] for x in single_data]
+    single_counts = [x['stars'] for x in single_data]
 
-    single_hist = parse.hist_data(timesteps, counts)
-    plt.plot(single_hist[0], single_hist[1], label="Counts")
+    single_hist = parse.hist_data(single_timesteps, single_counts)
+    plt.plot(single_hist[0], single_hist[1], label="Single Counts")
 
-    # Neutron star escape counts
+    # Single neutron star escape counts
     single_escapes = parse.parse_single_run_esc(dir)
-    plt.hist(single_escapes, bins=timesteps, histtype="stepfilled", label="Escapes", fill=False)
+    plt.hist(single_escapes, bins=single_timesteps, histtype="stepfilled", label="Escapes", fill=False)
+
+    # Binary neutron star counts
+    binary_data = parse.parse_run(dir, "binary")
+    binary_timesteps = [x['time'] for x in binary_data]
+    binary_counts = [x['stars'] for x in binary_data]
+
+    binary_hist = parse.hist_data(binary_timesteps, binary_counts)
+    plt.plot(binary_hist[0], binary_hist[1], label="Binary Counts")
 
     plt.title("Evolution of Single Neutron Star Counts")
     plt.xlabel("Physical Time (Myr)")

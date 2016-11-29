@@ -66,6 +66,8 @@ def parse_bev(bev_name):
 
         for line in f:
             data_line = line.split()
+            if int(data_line[0]) == -1000: # -1000 is the sentinel value indicating EOF
+                return { "time": physical_time, "stars": count }
             # third item in row is first star type
             if int(data_line[2]) == NEUTRON_STAR:
                 count += 1
@@ -73,25 +75,33 @@ def parse_bev(bev_name):
             if int(data_line[3]) == NEUTRON_STAR:
                 count += 1
 
+    # This should only be required in case there is no -1000 EOF value
     return { "time": physical_time, "stars": count }
 
-def parse_save(save_dir):
-    sev_files = os.path.join(save_dir, "sev.83_*")
+def parse_save(save_dir, option="single"):
+    # option specifies whether to parse single or binary data
 
     data = []
-    for filename in glob.glob(sev_files):
-        data.append(parse_sev(filename))
+    if option == "single":
+        files = os.path.join(save_dir, "sev.83_*")
+        for filename in glob.glob(files):
+            data.append(parse_sev(filename))
+    elif option == "binary":
+        files = os.path.join(save_dir, "bev.82_*")
+        for filename in glob.glob(files):
+            data.append(parse_bev(filename))
 
     # Sort by physical time
     # http://stackoverflow.com/questions/72899/how-do-i-sort-a-list-of-dictionaries-by-values-of-the-dictionary-in-python
     return sorted(data, key=lambda k: k['time'])
 
-def parse_run(run_dir):
+def parse_run(run_dir, option="single"):
+    # option specifies whether to parse single or binary data
     save_dirs = os.path.join(run_dir, "save*")
 
     data = []
     for dirname in glob.glob(save_dirs):
-        save_data = parse_save(dirname)
+        save_data = parse_save(dirname, option)
         if len(save_data) is 0:
             continue
 
@@ -171,7 +181,7 @@ def test_parse_save():
         "N10K_r26_Z02_11",
         "save02"
     )
-    print parse_save(data_dir)
+    print parse_save(data_dir, "single")
 
 def test_parse_run():
     data_dir = os.path.join(
@@ -179,7 +189,7 @@ def test_parse_run():
         "RgSun_NZgrid_BHFLAG2",
         "N10K_r26_Z02_11"
     )
-    print parse_run(data_dir)
+    print parse_run(data_dir, "single")
 
 def test_parse_single_esc():
     data_dir = os.path.join(
@@ -202,16 +212,14 @@ def test_parse_bev():
     data_dir = os.path.join(
         "/projects/b1011/ageller/NBODY6ppGPU/Nbody6ppGPU-newSE/run",
         "RgSun_NZgrid_BHFLAG2",
-        "N10K_r26_Z02_11",
+        "N10K_r26_Z02_15",
         "save02",
-        "bev.82_805"
+        "bev.82_4375"
     )
     print parse_bev(data_dir)
 
 def main():
     # test_parse_sev()
-    # test_parse_save()
-    # test_parse_run()
     # test_parse_single_esc()
     # test_parse_single_run_esc()
     test_parse_bev()
