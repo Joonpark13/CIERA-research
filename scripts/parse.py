@@ -78,24 +78,24 @@ def parse_run(run_dir):
 
         if len(data)is 0:
             data = save_data
-        elif data[-1]['time'] < save_data[0]['time']:
+        # Make sure there is no overlap
+        elif len(save_data) > 0 and data[-1]['time'] < save_data[0]['time']:
             data += save_data
         else:
-            # Iterate through data until an element with time >= than that of save_data[0]'s time is found
             index = 0
             for i in range(len(data)):
-                if data[i]['time'] >= save_data[0]['time']:
+                # In case of overlapping data between save files
+                if len(save_data) > 0 and data[i]['time'] >= save_data[0]['time']:
                     index = i
                     break
             # Throw out all elements of data from that element onward
-            data = data[:i]
+            data = data[:index] # If no overlap detected, this line will do nothing.
             # Add save_data to the end of data
             data += save_data
 
     return data
 
-def parse_esc(save_dir):
-    # TODO: Function may not be valid, reference discussion with Aaron
+def parse_single_esc(save_dir):
     escape_times = []
     with open(os.path.join(save_dir, "esc.11"), 'r') as f:
         # Skip the header
@@ -111,17 +111,25 @@ def parse_esc(save_dir):
 
     return escape_times
 
-def parse_run_esc(run_dir):
+def parse_single_run_esc(run_dir):
     save_dirs = os.path.join(run_dir, "save*")
 
     escapes = []
     for dirname in glob.glob(save_dirs):
-        save_escapes = parse_esc(dirname)
-        if len(escapes) == 0: # For save01
-            escapes_times = save_escapes
-        else:
-            pass
-    # TODO: FUNCTION TO BE COMPLETED
+        save_escapes = parse_single_esc(dirname)
+
+        # Check for overlap
+        index = len(escapes)
+        for i in range(len(escapes)):
+            if len(save_escapes) > 0 and escapes[i] >= save_escapes[0]:
+                index = i
+                break
+        # Throw out all overlapping elements from earlier save files
+        escapes = escapes[:index] # If no overlap detected, this line will do nothing.
+        # Append new data from savefile.
+        escapes += save_escapes
+
+    return escapes
 
 
 def test_parse_sev():
@@ -151,20 +159,29 @@ def test_parse_run():
     )
     print parse_run(data_dir)
 
-def test_parse_esc():
+def test_parse_single_esc():
     data_dir = os.path.join(
         "/projects/b1011/ageller/NBODY6ppGPU/Nbody6ppGPU-newSE/run",
         "RgSun_NZgrid_BHFLAG2",
         "N10K_r26_Z02_11",
         "save02"
     )
-    print parse_esc(data_dir)
+    print parse_single_esc(data_dir)
+
+def test_parse_single_run_esc():
+    data_dir = os.path.join(
+        "/projects/b1011/ageller/NBODY6ppGPU/Nbody6ppGPU-newSE/run",
+        "RgSun_NZgrid_BHFLAG2",
+        "N10K_r26_Z02_11"
+    )
+    print parse_single_run_esc(data_dir)
 
 def main():
     # test_parse_sev()
     # test_parse_save()
     # test_parse_run()
-    # test_parse_esc()
+    # test_parse_single_esc()
+    test_parse_single_run_esc()
 
 if __name__ == "__main__":
     main()
