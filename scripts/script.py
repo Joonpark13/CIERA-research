@@ -103,19 +103,3 @@ def plot_avg(data_dir, output, option):
 
     plt.clf()
 
-
-params = {
-    'star_num': [10, 20, 40, 80, 160],
-    'rad': [26],
-    'metallicity': ['02', '002']
-}
-
-data_dir = os.path.join(
-    "/projects/b1011/ageller/NBODY6ppGPU/Nbody6ppGPU-newSE/run/RgSun_NZgrid_BHFLAG2",
-    "N{0}K_r{1}_Z{2}_*".format(
-        params['star_num'][1],
-        params['rad'][0],
-        params['metallicity'][0]
-    )
-)
-
