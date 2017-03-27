@@ -1,3 +1,5 @@
+# This repository is now OUTDATED. Find the newer version here: https://github.com/Joonpark13/neutron-stars
+
 ## From Aaron:
 
 this directory contains 1 N-body simulation from our current grid.  This was copied from Quest:
